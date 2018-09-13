@@ -6,8 +6,11 @@ import android.support.v4.app.FragmentPagerAdapter
 import com.abhi.poochfinder.Fragments.DetailsFragment
 import com.abhi.poochfinder.Fragments.HomeFragment
 
+/**
+ * Simple PagerAdapter class to create new tabs
+ *
+ */
 class TabPagerAdapter(fm: FragmentManager, private val tabCount: Int): FragmentPagerAdapter(fm) {
-
 
     override fun getCount(): Int {
         return tabCount

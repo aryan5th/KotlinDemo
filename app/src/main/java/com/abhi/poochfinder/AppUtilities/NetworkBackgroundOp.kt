@@ -2,14 +2,21 @@ package com.abhi.poochfinder.AppUtilities
 
 import android.content.Context
 import android.os.AsyncTask
+import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.widget.ProgressBar
 import com.abhi.poochfinder.ApiResponse.ApiResponse
+import com.abhi.poochfinder.Fragments.DetailsFragment
 import com.abhi.poochfinder.R
 import java.io.IOException
 import java.net.SocketTimeoutException
 
+/**
+ * An utility class to handle network operations using AsyncTask.
+ * NetworkUtility is used to call all okhttp3 APIs
+ *
+ */
 
 class NetworkBackgroundOp : AsyncTask<Any, Void, String> {
 
@@ -37,37 +44,36 @@ class NetworkBackgroundOp : AsyncTask<Any, Void, String> {
     }
 
     override fun onPreExecute() {
-        Log.e(TAG,"onPreExecute Request URL :"+url + "Connection: " +
-                NetworkUtility.isDataNetworkAvailable(context!!));
+        Log.e(TAG,"onPreExecute Request URL: $url Connection: " +
+                NetworkUtility.isDataNetworkAvailable(context!!))
         if (!NetworkUtility.isDataNetworkAvailable(context!!)) {
             showErrorDialog(context!!.getString(R.string.connectivity_error),
                             context!!.getString(R.string.connectivity_error_msg))
 
             this.cancel(true)
             return
-        }
-        else        {
+        } else {
             if(isProgressBar) {
                 showProgressDialog()
             }
         }
-
     }
 
     override fun doInBackground(vararg arg0: Any): String? {
-
         apiResponse = arg0[0] as ApiResponse
         var response: String? = null
+
         if (isGET) {
-            Log.d(TAG, "calling NetworkUtility.getResponseWithGet for url : " + url)
+            Log.d(TAG, "calling NetworkUtility.getResponseWithGet for url : $url")
+
             try {
                 response = NetworkUtility.getResponseWithGet(url)//get method
             }
             catch (e: Exception) {
-                when(e) {
+                when (e) {
                     is SocketTimeoutException,
                     is IOException -> {
-                        Log.d(TAG, "Exception occured !!!")
+                        Log.d(TAG, "Exception occurred !!!")
                         showErrorDialog(context!!.getString(R.string.connectivity_error),
                                 context!!.getString(R.string.connectivity_error_msg))
 
@@ -76,21 +82,20 @@ class NetworkBackgroundOp : AsyncTask<Any, Void, String> {
 
             }
         }
-
         return response
     }
 
     override fun onPostExecute(response: String?) {
 
-        Log.e(TAG,"onPostExecute: Response in ASYNC :" + response)
-        if(alertDialog !=null) {
+        Log.e(TAG,"onPostExecute: Response in ASYNC : $response")
+        if (alertDialog !=null) {
             if(alertDialog!!.isShowing)
             {
                 alertDialog!!.dismiss()
             }
         }
-        if(response == null) {
-            Log.d(TAG,"Response is null :" + response)
+        if (response == null) {
+            Log.d(TAG,"Response is null: $response")
 
             showErrorDialog(context!!.getString(R.string.server_error),
                             context!!.getString(R.string.server_error_msg))
@@ -103,10 +108,10 @@ class NetworkBackgroundOp : AsyncTask<Any, Void, String> {
         alertDialogBuilder = AlertDialog.Builder(context!!)
         alertDialogBuilder!!.setTitle(R.string.progress_dialog_title)
         alertDialogBuilder!!.setCancelable(true)
-        var progressBar = ProgressBar(context, null,
+        val progressBar = ProgressBar(context, null,
                 android.R.attr.progressBarStyleHorizontal)
 
-        progressBar!!.isIndeterminate = true
+        progressBar.isIndeterminate = true
         alertDialogBuilder!!.setView(progressBar)
         alertDialog = alertDialogBuilder!!.show()
     }
@@ -120,11 +125,7 @@ class NetworkBackgroundOp : AsyncTask<Any, Void, String> {
             dialog,
                 which -> dialog.dismiss()
         }
-        alertDialogBuilder!!.setPositiveButton(R.string.error_dialog_retry) {
-            dialog,
-                which ->
-                    NetworkBackgroundOp(context!!,isProgressBar, url, code).execute(context)
-        }
+
         alertDialogBuilder!!.show()
     }
 }

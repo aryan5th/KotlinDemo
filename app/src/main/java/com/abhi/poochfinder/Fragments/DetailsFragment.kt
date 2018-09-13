@@ -1,6 +1,5 @@
 package com.abhi.poochfinder.Fragments
 
-import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import android.os.AsyncTask
@@ -14,7 +13,6 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import com.abhi.poochfinder.ApiResponse.ApiResponse
 import com.abhi.poochfinder.AppUtilities.AppConstants
@@ -24,11 +22,6 @@ import com.abhi.poochfinder.R
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
 /**
  * A simple [Fragment] subclass.
@@ -42,48 +35,35 @@ private const val ARG_PARAM2 = "param2"
 var imgSrc: ImageView?= null
 var breedName: TextView? = null
 var wm: WindowManager? = null
-var myprogressBar:ProgressBar?  = null
+
 
 class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
-
 
     private val TAG = DetailsFragment::class.java.simpleName as String
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         val view: View = inflater.inflate(R.layout.fragment_details, container, false)
-        var btnName: Button = view.findViewById(R.id.btnName)
+
+        val btnName = view.findViewById<Button>(R.id.btnName)
 
         imgSrc = view.findViewById(R.id.imgSource)
         breedName = view.findViewById(R.id.txtBreedName)
 
-        Log.e(TAG, "Breedname is : " + breedName!!.text)
+        imgSrc!!.scaleType = ImageView.ScaleType.FIT_CENTER
 
         btnName.setOnClickListener(this)
 
-        wm = getContext()!!.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        wm = context!!.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
         return view
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        Log.e(TAG, "onButtonPressed")
-        listener?.onFragmentInteraction(uri)
     }
 
     override fun onAttach(context: Context) {
@@ -110,13 +90,12 @@ class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
      * for more information.
      */
     interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         fun onFragmentInteraction(uri: Uri)
     }
 
     override fun onClick(v: View?) {
         Log.e(TAG,"Button clicked")
-        NetworkBackgroundOp(activity as Activity,true, AppConstants.ApiUrls.fetchInfoUrl,
+        NetworkBackgroundOp(context!!,true, AppConstants.ApiUrls.fetchInfoUrl,
                 AppConstants.ApiCode.FETCH_DATA)
                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,this)
     }
@@ -126,34 +105,27 @@ class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.
          *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
          * @return A new instance of fragment DetailsFragment.
          */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance() =
                 DetailsFragment().apply {
                     arguments = Bundle().apply {
-                        putString(ARG_PARAM1, param1)
-                        putString(ARG_PARAM2, param2)
                     }
                 }
     }
 
     override fun apiResponsePostProcessing(response: String, apiCode: Int) {
-        Log.e("PageFragment", " apiResponsePostProcessing FETCH_DATA apiCode" + apiCode);
+        Log.e(TAG, " apiResponsePostProcessing FETCH_DATA apiCode : $apiCode")
         when (apiCode) {
             AppConstants.ApiCode.FETCH_DATA -> {
-                Log.e("PageFragment", " apiResponsePostProcessing FETCH_DATA" + response);
+                Log.e("PageFragment", " apiResponsePostProcessing FETCH_DATA: $response")
                 val gson = Gson()
 
                 val topic = gson.fromJson(response, PoochUriResponse::class.java)
 
-                //val domain: String? = topic!!.message.substringAfterLast("@")
-
                 val parts = topic!!.message.split("/")
-                Log.e("Abhi:", "Splitted string size: "+ parts.size + "name :" + parts[parts.size - 2]);
+
                 var breed: String = parts[parts.size - 2]
 
                 val strArray = breed.split("-")
@@ -164,26 +136,23 @@ class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
                     builder.append("$cap ")
                 }
                 breed = builder.toString()
-                Log.e(TAG, "Breed is: " + breed )
-                //var pooch = PoochInfo(breed, "My cute puppy", topic!!.message)
 
-                //detailsAdapter!!.updateData(pooch)
-                updateViewContent(breed, topic!!.message);
+                Log.d(TAG, "Breed is: $breed" )
 
+                updateViewContent(breed, topic.message)
             }
         }
     }
 
     override fun networkError(apiCode: Int) {
-        Log.d("PageFragment", " networkError");
+        Log.d("PageFragment", " networkError")
     }
 
     override fun responseError(responseError: String, apiCode: Int) {
-        Log.d("PageFragment", " responseError");
+        Log.d("PageFragment", " responseError")
     }
 
-    fun fetchDataFromServer(ctx: Context) {
-        Log.d("Abhi:", "Calling BackgroundAsyncTask ")
+    fun fetchDataFromServer(ctx: Context ) {
         if(breedName!!.text.equals(ctx.getString(R.string.unknown_breed))) {
             NetworkBackgroundOp(ctx, true, AppConstants.ApiUrls.fetchInfoUrl,
                     AppConstants.ApiCode.FETCH_DATA)
@@ -193,7 +162,7 @@ class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
         }
     }
 
-    fun updateViewContent(breed: String, imgUri: String) {
+    private fun updateViewContent(breed: String, imgUri: String) {
 
         breedName!!.text = breed
 
@@ -204,9 +173,10 @@ class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
         val width = metrics.widthPixels
         val height = metrics.heightPixels
 
-        var newWidth = 0
-        var newHeight = 0
-        var maxWidthAndHeight = 1040
+        val maxWidthAndHeight = 1040
+        var newWidth = width
+        var newHeight = maxWidthAndHeight
+
 
         if (width >= height){
             val ratio:Float = width.toFloat() / height.toFloat()
@@ -214,21 +184,16 @@ class DetailsFragment : Fragment(), View.OnClickListener, ApiResponse {
             newWidth = maxWidthAndHeight
             // Calculate the new height for the scaled bitmap
             newHeight = Math.round(maxWidthAndHeight / ratio)
-        } else {
-            val ratio:Float = height.toFloat() / width.toFloat()
-
-            // Calculate the new width for the scaled bitmap
-            newWidth = width //Math.round(maxWidthAndHeight / ratio)
-            newHeight = maxWidthAndHeight
         }
 
         Log.d(TAG, "Width: " + width + "height: " + height)
         Log.d(TAG, "newWidth: " + newWidth + "newHeight: " + newHeight)
 
+
         Picasso.get()
                 .load(imgUri)
+                .error(R.drawable.error)
                 .resize(newWidth, newHeight)
-                .centerCrop()
                 .into(imgSrc)
     }
 }
